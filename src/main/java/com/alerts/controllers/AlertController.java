@@ -1,6 +1,5 @@
 package com.alerts.controllers;
 
-import org.apache.logging.log4j.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +13,6 @@ import com.alerts.DTO.AlertDTO;
 import com.alerts.DTO.IndividualAlertDTO;
 import com.alerts.DTO.MarkAsReadDTO;
 import com.alerts.DTO.MessageDTO;
-import com.alerts.entities.IndividualAlert;
 import com.alerts.entities.Topic;
 import com.alerts.services.Alert.AlertService;
 

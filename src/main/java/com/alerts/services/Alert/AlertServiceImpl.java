@@ -62,7 +62,7 @@ public class AlertServiceImpl implements AlertService {
         }
 
         alert.setMessage(alertDto.getMessage());
-        alert.setExpirationDate(alertDto.getExperationDate());
+        alert.setExpirationDate(alertDto.getExpirationDate());
 
         HashMap<String, User> users = userRepository.getUsersMap();
 

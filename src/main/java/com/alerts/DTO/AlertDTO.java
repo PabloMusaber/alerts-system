@@ -9,5 +9,5 @@ public class AlertDTO {
     private String type;
     private String topicName;
     private String message;
-    private Date experationDate;
+    private Date expirationDate;
 }

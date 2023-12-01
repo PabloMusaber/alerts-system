@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.alerts.DTO.SubscribedTopicDTO;
 import com.alerts.entities.IndividualAlert;
 import com.alerts.entities.Topic;
@@ -13,8 +16,10 @@ import com.alerts.repositories.TopicRepository;
 import com.alerts.repositories.UserRepository;
 import com.alerts.services.Alert.AlertComparator;
 
+@Service
 public class UserServiceImpl implements UserService {
 
+    @Autowired // Necesario
     private UserRepository userRepository;
 
     private TopicRepository topicRepository;

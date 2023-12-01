@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Repository;
+
 import com.alerts.entities.User;
 
+@Repository
 public class UserRepository {
     HashMap<String, User> users = new HashMap<>();
 

@@ -22,6 +22,9 @@ public class UserServiceImpl implements UserService {
     @Autowired // Necesario
     private UserRepository userRepository;
 
+    @Autowired // Necesario: Resuelve error "Cannot invoke
+               // \"com.alerts.repositories.TopicRepository.getTopics()\" because
+               // \"this.topicRepository\" is null"
     private TopicRepository topicRepository;
 
     @Override

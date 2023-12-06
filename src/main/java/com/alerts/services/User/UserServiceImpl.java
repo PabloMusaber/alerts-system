@@ -37,21 +37,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User subscribeTopic(SubscribedTopicDTO subscribedTopicDto) throws Exception {
-        List<Topic> topics = topicRepository.getTopics();
         User user = userRepository.getUser(subscribedTopicDto.getUserName());
 
         if (user == null) {
             throw new Exception("User doesn't exist.");
         }
 
-        for (Topic item : topics) {
-            if (item.getTopicName().equals(subscribedTopicDto.getTopicName())) {
-                // Encuentro el tema y lo agrego en la lista de subscriptos
-                user.subscribeTopic(item);
-                return user;
-            }
-        }
-        throw new Exception("El tema no existe.");
+        Topic topic = findTopicByName(subscribedTopicDto.getTopicName());
+        user.subscribeTopic(topic);
+        return user;
     }
 
     @Override
@@ -83,6 +77,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getUsers() {
         return userRepository.getUsers();
+    }
+
+    private Topic findTopicByName(String topicName) throws Exception {
+        List<Topic> topics = topicRepository.getTopics();
+
+        for (Topic item : topics) {
+            if (item.getTopicName().equals(topicName)) {
+                return item;
+            }
+        }
+
+        throw new Exception("Topic doesn't exist.");
     }
 
 }

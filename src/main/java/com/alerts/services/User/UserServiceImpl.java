@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alerts.DTO.SubscribedTopicDTO;
@@ -19,13 +18,14 @@ import com.alerts.services.Alert.AlertComparator;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired // Necesario
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired // Necesario: Resuelve error "Cannot invoke
-               // \"com.alerts.repositories.TopicRepository.getTopics()\" because
-               // \"this.topicRepository\" is null"
-    private TopicRepository topicRepository;
+    private final TopicRepository topicRepository;
+
+    public UserServiceImpl (UserRepository userRepository, TopicRepository topicRepository){
+        this.userRepository = userRepository;
+        this.topicRepository = topicRepository;
+    }
 
     @Override
     public User createUser(String userName) {

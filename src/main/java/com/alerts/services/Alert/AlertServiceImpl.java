@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.alerts.DTO.AlertDTO;
@@ -24,14 +23,18 @@ import com.alerts.repositories.UserRepository;
 @Service
 public class AlertServiceImpl implements AlertService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private TopicRepository topicRepository;
+    private final TopicRepository topicRepository;
 
-    @Autowired
-    private AlertRepository alertRepository;
+    private final AlertRepository alertRepository;
+
+    public AlertServiceImpl (UserRepository userRepository,
+        TopicRepository topicRepository, AlertRepository alertRepository){
+        this.userRepository = userRepository;
+        this.topicRepository = topicRepository;
+        this.alertRepository = alertRepository;
+    }
 
     @Override
     public Alert globalAlert(AlertDTO alertDto) throws Exception {

@@ -42,8 +42,8 @@ public class AlertController {
         }
     }
 
-    @PatchMapping("/leida")
-    public ResponseEntity<?> marcarLeida(@RequestBody MarkAsReadDTO markAsReadDto) {
+    @PatchMapping("/read")
+    public ResponseEntity<?> markAsRead(@RequestBody MarkAsReadDTO markAsReadDto) {
         try {
             return ResponseEntity.ok(alertService.markAsRead(markAsReadDto));
         } catch (Exception e) {
@@ -51,8 +51,8 @@ public class AlertController {
         }
     }
 
-    @GetMapping("/tema")
-    public ResponseEntity<?> obtenerAlertasPorTema(@RequestBody Topic topic) {
+    @GetMapping("/topic")
+    public ResponseEntity<?> getAlertsByTopic(@RequestBody Topic topic) {
         try {
             return ResponseEntity.ok(alertService.getAlertsByTopic(topic));
         } catch (Exception e) {

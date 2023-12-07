@@ -29,8 +29,8 @@ public class AlertServiceImpl implements AlertService {
 
     private final AlertRepository alertRepository;
 
-    public AlertServiceImpl (UserRepository userRepository,
-        TopicRepository topicRepository, AlertRepository alertRepository){
+    public AlertServiceImpl(UserRepository userRepository,
+            TopicRepository topicRepository, AlertRepository alertRepository) {
         this.userRepository = userRepository;
         this.topicRepository = topicRepository;
         this.alertRepository = alertRepository;
@@ -122,7 +122,7 @@ public class AlertServiceImpl implements AlertService {
         }
 
         individualAlert.setMessage(individualAlertDto.getMessage());
-        individualAlert.setExpirationDate(individualAlertDto.getExperationDate());
+        individualAlert.setExpirationDate(individualAlertDto.getExpirationDate());
         individualAlert.setUserName(individualAlertDto.getUserName());
         individualAlert.setRead(false);
 

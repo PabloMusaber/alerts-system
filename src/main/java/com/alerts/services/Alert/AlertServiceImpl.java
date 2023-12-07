@@ -1,10 +1,9 @@
 package com.alerts.services.Alert;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -39,30 +38,20 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public Alert globalAlert(AlertDTO alertDto) throws Exception {
 
-        // Crea una nueva instancia de Alert para cada alert global
         Alert alert = new Alert();
 
-        // Chequeo que el tipo sea válido
-        if (alertDto.getType().equals("Informativa")) {
-            alert.setAlertType(AlertType.INFORMATIVE);
-        } else if (alertDto.getType().equals("Urgente")) {
-            alert.setAlertType(AlertType.URGENT);
-        } else {
-            throw new Exception("The selected alert type does not exist.");
+        try {
+            alert.setAlertType(parseAlertType(alertDto.getType()));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Error parsing alert type.", e);
         }
 
-        // Chequeo que el topic sea válido
         List<Topic> topics = topicRepository.getTopics();
-        for (Topic topic : topics) {
-            if (topic.getTopicName().equals(alertDto.getTopicName())) {
-                alert.setTopic(topic);
-                break;
-            }
-        }
-
-        if (alert.getTopic() == null) {
-            throw new Exception("The selected topic does not exist.");
-        }
+        Topic selectedTopic = topics.stream()
+                .filter(topic -> topic.getTopicName().equals(alertDto.getTopicName()))
+                .findFirst()
+                .orElseThrow(() -> new Exception("The selected topic does not exist."));
+        alert.setTopic(selectedTopic);
 
         alert.setMessage(alertDto.getMessage());
         alert.setExpirationDate(alertDto.getExpirationDate());
@@ -70,28 +59,20 @@ public class AlertServiceImpl implements AlertService {
         HashMap<String, User> users = userRepository.getUsersMap();
 
         for (User user : users.values()) {
-            // Crear una nueva instancia de Alert Individual para cada user, para poder
-            // guardar su estado de leída
-            IndividualAlert individualAlert = new IndividualAlert();
-            individualAlert.setAlertType(alert.getAlertType());
-            individualAlert.setTopic(alert.getTopic());
-            individualAlert.setMessage(alert.getMessage());
-            individualAlert.setExpirationDate(alert.getExpirationDate());
-            individualAlert.setRead(false);
-            individualAlert.setUserName(user.getUserName());
-            // El id de cada alert será distinto para cada user, en base a la posición
-            // que ocupe la alert dentro de su la lista de alertas
-            individualAlert.setId(user.getAlerts().size());
-
-            if (user.getSuscribedTopics().contains(individualAlert.getTopic())) {
+            if (user.getSuscribedTopics().contains(alert.getTopic())) {
+                IndividualAlert individualAlert = new IndividualAlert();
+                individualAlert.setAlertType(alert.getAlertType());
+                individualAlert.setTopic(alert.getTopic());
+                individualAlert.setMessage(alert.getMessage());
+                individualAlert.setExpirationDate(alert.getExpirationDate());
+                individualAlert.setRead(false);
+                individualAlert.setUserName(user.getUserName());
+                individualAlert.setId(user.getAlerts().size());
                 user.getAlerts().add(individualAlert);
             }
         }
 
         userRepository.saveUsers(users);
-
-        // El id que se guarda en la lista global de alertas corresponde al número total
-        // de alertas emitidas, contando globales como individuales.
         alert.setId(alertRepository.getAlerts().size());
         alertRepository.addAlert(alert);
         return alert;
@@ -101,25 +82,18 @@ public class AlertServiceImpl implements AlertService {
     public IndividualAlert individualAlert(IndividualAlertDTO individualAlertDto) throws Exception {
         IndividualAlert individualAlert = new IndividualAlert();
 
-        if (individualAlertDto.getType().equals("Informativa")) {
-            individualAlert.setAlertType(AlertType.INFORMATIVE);
-        } else if (individualAlertDto.getType().equals("Urgente")) {
-            individualAlert.setAlertType(AlertType.URGENT);
-        } else {
-            throw new Exception("The selected alert type does not exist.");
+        try {
+            individualAlert.setAlertType(parseAlertType(individualAlertDto.getType()));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Error parsing alert type.", e);
         }
 
         List<Topic> topics = topicRepository.getTopics();
-        for (Topic topic : topics) {
-            if (topic.getTopicName().equals(individualAlertDto.getTopicName())) {
-                individualAlert.setTopic(topic);
-                break;
-            }
-        }
-
-        if (individualAlert.getTopic() == null) {
-            throw new Exception("The selected topic does not exist.");
-        }
+        Topic selectedTopic = topics.stream()
+                .filter(topic -> topic.getTopicName().equals(individualAlertDto.getTopicName()))
+                .findFirst()
+                .orElseThrow(() -> new Exception("The selected topic does not exist."));
+        individualAlert.setTopic(selectedTopic);
 
         individualAlert.setMessage(individualAlertDto.getMessage());
         individualAlert.setExpirationDate(individualAlertDto.getExpirationDate());
@@ -141,37 +115,49 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public IndividualAlert markAsRead(MarkAsReadDTO markAsReadDto) throws Exception {
-        try {
-            User user = userRepository.getUser(markAsReadDto.getUserName());
-            user.getAlerts().get(markAsReadDto.getAlertNumber()).setRead(true);
-            return user.getAlerts().get(markAsReadDto.getAlertNumber());
-        } catch (Exception e) {
-            throw new Exception("Doesn't exist alert number " + markAsReadDto.getAlertNumber() + " for "
-                    + markAsReadDto.getUserName());
+        User user = userRepository.getUser(markAsReadDto.getUserName());
+        if (user == null) {
+            throw new Exception("User " + markAsReadDto.getUserName() + " doesn't exist.");
         }
+
+        List<IndividualAlert> alerts = user.getAlerts();
+
+        if (alerts == null || markAsReadDto.getAlertNumber() < 0 || markAsReadDto.getAlertNumber() >= alerts.size()) {
+            throw new Exception("Alert not found.");
+        }
+
+        alerts.get(markAsReadDto.getAlertNumber()).setRead(true);
+        return alerts.get(markAsReadDto.getAlertNumber());
     }
 
     @Override
     public List<Alert> getAlertsByTopic(Topic topic) throws Exception {
-        try {
-            List<Alert> alerts = alertRepository.getAlerts();
-            List<Alert> currentAlerts = new ArrayList<>();
-            Date currentDate = new Date();
-
-            for (Alert alert : alerts) {
-                // Verifico que la alert corresponda al topic y que NO esté expirada
-                if ((alert.getTopic().getTopicName().equals(topic.getTopicName()))
-                        && (alert.getExpirationDate().after(currentDate)
-                                || alert.getExpirationDate().equals(currentDate))) {
-                    currentAlerts.add(alert);
-                }
-            }
-
-            // Realizo el ordenamiento requerido
-            Collections.sort(currentAlerts, new AlertComparator());
-            return currentAlerts;
-        } catch (Exception e) {
+        List<Alert> alerts = alertRepository.getAlerts();
+        if (alerts == null) {
             throw new Exception("Error al obtener alertas.");
+        }
+
+        Date currentDate = new Date();
+
+        List<Alert> currentAlerts = alerts.stream()
+                .filter(alert -> alert.getTopic().getTopicName().equals(topic.getTopicName())
+                        && (alert.getExpirationDate().after(currentDate)
+                                || alert.getExpirationDate().equals(currentDate)))
+                .sorted(new AlertComparator())
+                .collect(Collectors.toList());
+
+        return currentAlerts;
+    }
+
+    private AlertType parseAlertType(String type) {
+        try {
+            if (type != null) {
+                return AlertType.valueOf(type.toUpperCase());
+            } else {
+                throw new IllegalArgumentException("The alert type cannot be null.");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid alert type.", e);
         }
     }
 
